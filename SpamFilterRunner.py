@@ -11,9 +11,3 @@ sample_text_counts = loaded_vectorizer.transform(sample_text)
 prediction = loaded_clf.predict(sample_text_counts)
 print("Prediction:", prediction[0])
 print(type(prediction[0]))
-
-
-
-"""
-    subscribe_spam_email_script
-"""
