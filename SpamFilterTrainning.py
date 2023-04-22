@@ -1,10 +1,10 @@
-from sklearn.model_selection import train_test_split
+import pickle
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import (accuracy_score, classification_report,
+                             confusion_matrix)
+from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
-import pickle
-
 
 FilePath = 'spam.csv'
 processedFilePath = 'Processed.csv'
@@ -25,7 +25,8 @@ messages = data['v2'].values
 labels = data['v1'].values
 
 # Split the data into training and validation sets
-train_messages, test_messages, train_labels, test_labels = train_test_split(messages, labels, test_size= 0.2, random_state=42)
+train_messages, test_messages, train_labels, test_labels = train_test_split(
+    messages, labels, test_size=0.2, random_state=42)
 
 # Create a count vectorizer to convert text to a matrix of token counts
 vectorizer = CountVectorizer()
