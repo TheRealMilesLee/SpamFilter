@@ -69,6 +69,14 @@ def classify_emails(service, user_id='me'):
             subject = ''
             from_email = ''
 
+
+"""
+Iterating through the headers of an email message and extracting the values
+of the "subject" and "From" fields. It checks if the header name is "subject" or
+"Subject" and if so, it appends the value of that header to the "subject" variable.
+Similarly, if the header name is "From", it appends the value of that header to the
+"from_email" variable.
+"""
             for header in headers:
                 if header['name'] == 'subject' or header['name'] == 'Subject':
                     subject += header['value']
@@ -78,6 +86,15 @@ def classify_emails(service, user_id='me'):
             body_msg_str = ''
             part_msg_str = ''
 
+"""
+This code block is checking if the email message body is contained in the 'data' key of the
+'body' dictionary in the 'payload' dictionary. If it is, it decodes the message body from base64
+encoding and appends it to the 'body_msg_str' variable. If the message body is not contained in
+the 'data' key of the 'body' dictionary, it checks if the 'payload' dictionary contains a 'parts' key.
+If it does, it iterates through each part of the email message and checks if the message body is
+contained in the 'data' key of the 'body' dictionary for each part. If it is, it decodes the message
+body from base64 encoding and appends it to the 'body_msg_str' variable.
+"""
             if 'data' in payload['body'].keys():
                 body_msg_str += base64.urlsafe_b64decode(
                     payload['body']['data'].encode('ASCII')).decode('utf-8')
@@ -140,13 +157,11 @@ prediction is stored in the `part_msg_prediction` variable.
 Taking the subject of an email, converting it to lowercase, transforming it using a pre-trained CountVectorizer object (loaded from a saved file), and then using a pre-trained
  classifier (loaded from a saved file) to predict whether the email is spam or not based on the
  transformed string. The result of the prediction is stored in the `subject_prediction` variable.
+ Then use that to output the prediction result
  """
             subject = subject.lower()
             subject_str_counts = loaded_vectorizer.transform([subject])
             subject_prediction = loaded_clf.predict(subject_str_counts)
-"""
-Checking if the email body message string is not empty. If it is not empty, it uses a pre-trained classifier to predict whether the email is spam or not based on the transformed string. If the prediction is "spam", the `is_spam` variable is set to True. If the email body message string is empty, it checks the prediction of the pre-trained classifier on a specific part of the email (if it exists) and the subject of the email. If either of these predictions is "spam", the `is_spam` variable is set to True.
-"""
             if len(body_msg_str) > 0:
                 if body_msg_prediction[0] == "spam":
                     is_spam = True
@@ -156,13 +171,19 @@ Checking if the email body message string is not empty. If it is not empty, it u
                 if subject_prediction[0] == "spam":
                     is_spam = True
 
+"""
+Checking if the email address in the "From" field of the email is a known
+legitimate email address (such as accounts.google.com, googlecommunityteam-noreply@google.com,
+hotmail, or .edu). If the email address is found in this list, then the email is
+marked as not spam (is_spam = False). If the email address is not found in the list, then the email
+is marked as spam by adding the "SPAM" label to the email using the Gmail API.
+"""
             from_email = from_email.lower()
             ham_email_addresses = [
-                'accounts.google.com', 'googlecommunityteam-noreply@google.com', 'hotmail', 'outlook', 'aol', '.edu']
+                'accounts.google.com', 'googlecommunityteam-noreply@google.com', 'hotmail', '.edu']
             for ham_email_address in ham_email_addresses:
                 if ham_email_address in from_email:
                     is_spam = False
-
             if is_spam:
                 service.users().messages().modify(userId=user_id,
                                                   id=message['id'], body={'addLabelIds': ['SPAM']}).execute()
@@ -173,7 +194,6 @@ Checking if the email body message string is not empty. If it is not empty, it u
 
     return messages
 
-
 def main():
     """
     The main function calls the get_gmail_service function and passes it to the classify_emails
@@ -181,7 +201,6 @@ def main():
     """
     service = get_gmail_service()
     classify_emails(service)
-
 
 if __name__ == '__main__':
     main()
