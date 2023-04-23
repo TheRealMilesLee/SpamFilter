@@ -11,8 +11,7 @@ FilePath = 'spam.csv'
 processedFilePath = 'Processed.csv'
 
 """
-Reading a CSV file located at `FilePath` in binary mode (`'rb'`) and writing the
-contents to a new CSV file located at `processedFilePath` in text mode (`"w"`) with UTF-8 encoding. It is also decoding each line of the input file from UTF-8 encoding to Unicode and removing any trailing whitespace before writing it to the output file.
+Clenup the the dataset and delete all of the non utf-8 character. Write the after processed file into Processed.csv
  """
 with open(FilePath, 'rb') as csv_in:
     with open(processedFilePath, "w", encoding="utf-8") as csv_temp:
@@ -26,6 +25,7 @@ with open(FilePath, 'rb') as csv_in:
 data = pd.read_csv(processedFilePath, encoding='utf-8')
 
 
+# Assign label and data
 messages = data['v2'].values
 labels = data['v1'].values
 
@@ -39,9 +39,13 @@ train_messages_counts = vectorizer.fit_transform(train_messages)
 test_messages_counts = vectorizer.transform(test_messages)
 
 
-# `clf = MultinomialNB()` creates an instance of the Multinomial Naive Bayes classifier.
-# `clf.fit(train_messages_counts, train_labels)` trains the classifier on the training data by fitting
-# it to the training messages and their corresponding labels.
+"""
+`clf = MultinomialNB()` creates an instance of the Multinomial Naive Bayes classifier.
+The idea of multinomial naive bayes classifier can be found in here https://www.upgrad.com/blog/multinomial-naive-bayes-explained/
+
+`clf.fit(train_messages_counts, train_labels)` trains the classifier on the training data by fitting
+it to the training messages and their corresponding labels.
+"""
 clf = MultinomialNB()
 clf.fit(train_messages_counts, train_labels)
 
@@ -53,8 +57,10 @@ print("Accuracy:", accuracy_score(test_labels, label_pred))
 print("Confusion Matrix:\n", confusion_matrix(test_labels, label_pred))
 print("Classification Report:\n", classification_report(test_labels, label_pred))
 
+"""
+Save the model to the file named spam_classifier_model.pkl
+"""
 with open('spam_classifier_model.pkl', 'wb') as f:
     pickle.dump(clf, f)
-
 with open('count_vectorizer.pkl', 'wb') as f:
     pickle.dump(vectorizer, f)
