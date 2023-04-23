@@ -1,4 +1,5 @@
 import pickle
+
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import (accuracy_score, classification_report,
@@ -8,6 +9,11 @@ from sklearn.naive_bayes import MultinomialNB
 
 FilePath = 'spam.csv'
 processedFilePath = 'Processed.csv'
+
+"""
+This code block is reading a CSV file located at `FilePath` in binary mode (`'rb'`) and writing the
+contents to a new CSV file located at `processedFilePath` in text mode (`"w"`) with UTF-8 encoding. It is also decoding each line of the input file from UTF-8 encoding to Unicode and removing any trailing whitespace before writing it to the output file.
+ """
 with open(FilePath, 'rb') as csv_in:
     with open(processedFilePath, "w", encoding="utf-8") as csv_temp:
         for line in csv_in:
