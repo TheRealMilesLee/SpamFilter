@@ -11,7 +11,7 @@ FilePath = 'spam.csv'
 processedFilePath = 'Processed.csv'
 
 """
-This code block is reading a CSV file located at `FilePath` in binary mode (`'rb'`) and writing the
+Reading a CSV file located at `FilePath` in binary mode (`'rb'`) and writing the
 contents to a new CSV file located at `processedFilePath` in text mode (`"w"`) with UTF-8 encoding. It is also decoding each line of the input file from UTF-8 encoding to Unicode and removing any trailing whitespace before writing it to the output file.
  """
 with open(FilePath, 'rb') as csv_in:
@@ -26,7 +26,6 @@ with open(FilePath, 'rb') as csv_in:
 data = pd.read_csv(processedFilePath, encoding='utf-8')
 
 
-# Extract the message and label columns
 messages = data['v2'].values
 labels = data['v1'].values
 
@@ -39,7 +38,10 @@ vectorizer = CountVectorizer()
 train_messages_counts = vectorizer.fit_transform(train_messages)
 test_messages_counts = vectorizer.transform(test_messages)
 
-# Train a Naive Bayes classifier
+
+# `clf = MultinomialNB()` creates an instance of the Multinomial Naive Bayes classifier.
+# `clf.fit(train_messages_counts, train_labels)` trains the classifier on the training data by fitting
+# it to the training messages and their corresponding labels.
 clf = MultinomialNB()
 clf.fit(train_messages_counts, train_labels)
 
