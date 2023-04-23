@@ -8,20 +8,20 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# Replace with the path to your credentials file
+"""
+Function get_email_service and first half of function classify_emails is we reference the site https://www.geeksforgeeks.org/how-to-read-emails-from-gmail-using-gmail-api-in-python/ and
+https://codehandbook.org/how-to-read-email-from-gmail-using-python/ So we can learn how to get the email from the email provider and read them into the string so we can use them in our model to see if this is spam or not.
+"""
 KEY_FILE = 'credentials.json'
-
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 
 def get_gmail_service():
-    """Shows basic usage of the Gmail API.
-      Lists the user's Gmail labels.
-      """
+    """
+    This function returns a Gmail service object using user credentials.
+    :return: a Gmail API service object that can be used to interact with a user's Gmail account.
+    """
     creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
     # If there are no (valid) credentials available, let the user log in.
@@ -39,7 +39,23 @@ def get_gmail_service():
 
 
 def classify_emails(service, user_id='me'):
+    """
+    This function classifies emails as spam or not using a pre-trained model and marks spam emails with the SPAM label.
+
+    :param service: The Gmail API service object used to interact with the user's Gmail account
+    :param user_id: The ID of the user whose emails are being classified. By default, it is set to 'me',
+    which refers to the authenticated user, defaults to me (optional)
+    :return: the list of messages that were retrieved and processed by the function. However, if an
+    error occurs, the function returns None.
+    """
     try:
+        # Example: mark all emails containing the word 'spam' in the subject as spam
+        with open('spam_classifier_model.pkl', 'rb') as f:
+            loaded_clf = pickle.load(f)
+
+        with open('count_vectorizer.pkl', 'rb') as f:
+            loaded_vectorizer = pickle.load(f)
+
         results = service.users().messages().list(
             userId=user_id, labelIds=['INBOX']).execute()
         messages = results['messages']
@@ -92,26 +108,45 @@ def classify_emails(service, user_id='me'):
                                                     part_msg_str += base64.urlsafe_b64decode(
                                                         sub_sub_sub_part['body']['data'].encode('ASCII')).decode('utf-8')
 
+            """
+            Start from here is we using our module to filter the spam email. Credit to Jingbo Wang
+            """
             is_spam = False
-            # Example: mark all emails containing the word 'spam' in the subject as spam
-            with open('spam_classifier_model.pkl', 'rb') as f:
-                loaded_clf = pickle.load(f)
 
-            with open('count_vectorizer.pkl', 'rb') as f:
-                loaded_vectorizer = pickle.load(f)
 
+"""
+Taking the email body message string, converting it to lowercase,
+transforming it using a pre-trained CountVectorizer object (loaded from a saved file), and then
+using a pre-trained classifier (loaded from a saved file) to predict whether the email is spam or
+not based on the transformed string. The result of the prediction is stored in the
+`body_msg_prediction` variable.
+"""
             body_msg_str = body_msg_str.lower()
             body_msg_str_counts = loaded_vectorizer.transform([body_msg_str])
             body_msg_prediction = loaded_clf.predict(body_msg_str_counts)
 
+"""
+Taking the email body message string from a specific part of the email (if
+it exists), converting it to lowercase, transforming it using a pre-trained CountVectorizer object
+(loaded from a saved file), and then using a pre-trained classifier (loaded from a saved file) to
+predict whether the email is spam or not based on the transformed string. The result of the
+prediction is stored in the `part_msg_prediction` variable.
+"""
             part_msg_str = part_msg_str.lower()
             part_msg_str_counts = loaded_vectorizer.transform([part_msg_str])
             part_msg_prediction = loaded_clf.predict(part_msg_str_counts)
 
+"""
+Taking the subject of an email, converting it to lowercase, transforming it using a pre-trained CountVectorizer object (loaded from a saved file), and then using a pre-trained
+ classifier (loaded from a saved file) to predict whether the email is spam or not based on the
+ transformed string. The result of the prediction is stored in the `subject_prediction` variable.
+ """
             subject = subject.lower()
             subject_str_counts = loaded_vectorizer.transform([subject])
             subject_prediction = loaded_clf.predict(subject_str_counts)
-
+"""
+Checking if the email body message string is not empty. If it is not empty, it uses a pre-trained classifier to predict whether the email is spam or not based on the transformed string. If the prediction is "spam", the `is_spam` variable is set to True. If the email body message string is empty, it checks the prediction of the pre-trained classifier on a specific part of the email (if it exists) and the subject of the email. If either of these predictions is "spam", the `is_spam` variable is set to True.
+"""
             if len(body_msg_str) > 0:
                 if body_msg_prediction[0] == "spam":
                     is_spam = True
@@ -140,8 +175,11 @@ def classify_emails(service, user_id='me'):
 
 
 def main():
+    """
+    The main function calls the get_gmail_service function and passes it to the classify_emails
+    function.
+    """
     service = get_gmail_service()
-
     classify_emails(service)
 
 
