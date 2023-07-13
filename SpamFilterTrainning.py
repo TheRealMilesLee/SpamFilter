@@ -24,7 +24,6 @@ with open(FilePath, 'rb') as csv_in:
 # Load the CSV file into a pandas dataframe
 data = pd.read_csv(processedFilePath, encoding='utf-8')
 
-
 # Assign label and data
 messages = data['v2'].values
 labels = data['v1'].values
