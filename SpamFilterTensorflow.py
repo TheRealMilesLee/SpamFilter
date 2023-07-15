@@ -81,10 +81,7 @@ label_pred = np.round(label_pred_probs).flatten()
 print("Confusion Matrix:\n", confusion_matrix(test_labels, label_pred))
 print("Classification Report:\n", classification_report(test_labels, label_pred))
 
-# Save the model to a file using pickle
-with open('spam_classifier_model.pkl', 'wb') as f:
-    pickle.dump(model, f)
-
-# Save the vectorizer to a file using pickle
+# Save the model and vectorizer to files
+model.save('spam_classifier_model.h5')
 with open('count_vectorizer.pkl', 'wb') as f:
     pickle.dump(vectorizer, f)

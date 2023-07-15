@@ -56,9 +56,7 @@ def classify_emails(service, user_id='me'):
     """
     try:
         # Example: mark all emails containing the word 'spam' in the subject as spam
-        with open('spam_classifier_model.pkl', 'rb') as f:
-            loaded_clf = pickle.load(f)
-
+        model = tf.keras.models.load_model('spam_classifier_model.h5')
         with open('count_vectorizer.pkl', 'rb') as f:
             loaded_vectorizer = pickle.load(f)
 
@@ -87,11 +85,13 @@ def classify_emails(service, user_id='me'):
 
             # Extracting the email message body from the payload
             if 'data' in payload['body'].keys():
-                body_msg_str += base64.urlsafe_b64decode(payload['body']['data'].encode('ASCII')).decode('utf-8')
+                body_msg_str += base64.urlsafe_b64decode(
+                    payload['body']['data'].encode('ASCII')).decode('utf-8')
             elif 'parts' in payload.keys():
                 for part in payload['parts']:
                     if 'data' in part['body'].keys():
-                        body_msg_str += base64.urlsafe_b64decode(part['body']['data'].encode('ASCII')).decode('utf-8')
+                        body_msg_str += base64.urlsafe_b64decode(
+                            part['body']['data'].encode('ASCII')).decode('utf-8')
 
             # Preprocessing the email body and subject
             body_msg_str = body_msg_str.lower()
@@ -102,17 +102,18 @@ def classify_emails(service, user_id='me'):
             subject_str_counts = loaded_vectorizer.transform([subject])
 
             # Predicting the email class (spam or not spam)
-            body_msg_prediction = loaded_clf.predict(body_msg_str_counts)
-            subject_prediction = loaded_clf.predict(subject_str_counts)
+            body_msg_prediction = model.predict(body_msg_str_counts)
+            subject_prediction = model.predict(subject_str_counts)
 
             # Checking if the email is predicted as spam based on body or subject
-            if body_msg_prediction[0] == "spam" or subject_prediction[0] == "spam":
+            if body_msg_prediction[0] > 0.5 or subject_prediction[0] > 0.5:
                 is_spam = True
             else:
                 is_spam = False
 
             # Checking if the email address in the "From" field of the email is a known legitimate email address
-            ham_email_addresses = ['accounts.google.com', 'googlecommunityteam-noreply@google.com', 'hotmail', '.edu']
+            ham_email_addresses = [
+                'accounts.google.com', 'googlecommunityteam-noreply@google.com', 'hotmail', '.edu']
             for ham_email_address in ham_email_addresses:
                 if ham_email_address in from_email:
                     is_spam = False
@@ -134,6 +135,9 @@ def main():
     The main function calls the get_gmail_service function and passes it to the classify_emails
     function.
     """
+    options = tf.saved_model.LoadOptions(
+        experimental_io_device='/job:localhost')
+    tf.keras.models.load_model('spam_classifier_model.h5', options=options)
     service = get_gmail_service()
     classify_emails(service)
 
